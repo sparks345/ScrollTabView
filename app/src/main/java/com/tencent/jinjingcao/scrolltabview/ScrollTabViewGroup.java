@@ -20,6 +20,9 @@ import android.widget.Scroller;
  */
 
 public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
+    // default padding left and right for tab added program.
+    public static int DEFAULT_TAB_PADDING = 10;
+
     private static final int DEFAULT_LAYOUT_GRAVITY = Gravity.TOP | Gravity.START;
 
     private static final float DEFAULT_SLASH_DISTANCE = 50.0f;
@@ -290,6 +293,10 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
     public void addTab(View view) {
 //        view.setOnClickListener(this);
+        if (view.getPaddingLeft() == 0 && view.getPaddingRight() == 0) {
+            int padding = (int) (getResources().getDisplayMetrics().density * DEFAULT_TAB_PADDING);
+            view.setPadding(padding, view.getPaddingTop(), padding, view.getPaddingBottom());
+        }
         this.addView(view);
         invalidate();
     }
@@ -401,10 +408,6 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
     public static class LayoutParams extends MarginLayoutParams {
 
-        public static final int UNSPECIFIED_GRAVITY = -1;
-
-        public int gravity = UNSPECIFIED_GRAVITY;
-
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
 
@@ -413,7 +416,6 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 //                Object value = attrs.getAttributeValue(i);
 //                Log.d(TAG, name + " : " + value + " of type " + value.getClass().getSimpleName());
 //            }
-
         }
 
         public LayoutParams(int width, int height) {
