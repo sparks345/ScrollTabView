@@ -18,23 +18,26 @@
 
     <com.tencent.jinjingcao.scrolltabview.ScrollTabViewGroup
         android:id="@+id/tab_scroll"
-        android:background="@color/colorAccent"
-        android:paddingBottom="100dp"
+        app:layout_gravity="center_vertical"
+        android:background="#bcbcbc"
         android:layout_width="match_parent"
         android:layout_height="40dp">
 
-        <TextView
+        <com.tencent.jinjingcao.scrolltabview.ScrollTabView
+            android:paddingRight="20dp"
             android:layout_marginRight="40dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="aaaaa"/>
 
-        <TextView
+        <com.tencent.jinjingcao.scrolltabview.ScrollTabView
+            android:paddingRight="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="bbbb"/>
 
-        <TextView
+        <com.tencent.jinjingcao.scrolltabview.ScrollTabView
+            android:paddingRight="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="cccc"/>

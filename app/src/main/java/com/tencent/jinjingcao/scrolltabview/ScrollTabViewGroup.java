@@ -1,11 +1,13 @@
 package com.tencent.jinjingcao.scrolltabview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.os.Build.VERSION_CODES;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -18,6 +20,7 @@ import android.widget.Scroller;
  */
 
 public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
+    private static final int DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.START;
 
     private static final float DEFAULT_SLASH_DISTANCE = 50.0f;
     private static final float DEFAULT_CLICK_CAUSE_DISTANCE = 44.0f;
@@ -25,6 +28,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
     private static final int DEFAULT_DURATION = 400;
 
     private static final String TAG = "ScrollTabViewGroup";
+    private final int mLayoutGravity;
 
     float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
@@ -42,25 +46,38 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
     public ScrollTabViewGroup(Context context) {
         super(context);
         mScroller = new Scroller(context);
+        mLayoutGravity = DEFAULT_CHILD_GRAVITY;
         this.setOnTouchListener(this);
     }
 
     public ScrollTabViewGroup(Context context, AttributeSet attrs) {
         super(context, attrs);
         mScroller = new Scroller(context);
+        mLayoutGravity = getAttrLayoutGravity(context, attrs);
         this.setOnTouchListener(this);
     }
-
 
     public ScrollTabViewGroup(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mScroller = new Scroller(context);
+        mLayoutGravity = getAttrLayoutGravity(context, attrs);
+        this.setOnTouchListener(this);
     }
+
 
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     public ScrollTabViewGroup(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         mScroller = new Scroller(context);
+        mLayoutGravity = getAttrLayoutGravity(context, attrs);
+        this.setOnTouchListener(this);
+    }
+
+    private int getAttrLayoutGravity(Context context, AttributeSet attrs) {
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.ScrollTabViewGroup);
+        int ret = ta.getInt(R.styleable.ScrollTabViewGroup_layout_gravity, -1);
+        ta.recycle();
+        return ret;
     }
 
     /**
@@ -80,6 +97,9 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
         int selectedIndex = mSelectedIndex;// 默认选中的项
         int middlePos = 0;// 中间点
 
+        final int parentTop = getPaddingTop();// getPaddingTopWithForeground();
+        final int parentBottom = b - t - parentTop;
+
         for (int i = 0; i < childCount; i++) {
             View childView = getChildAt(i);
             if (i < selectedIndex) {
@@ -89,28 +109,48 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
         for (int i = 0; i < childCount; i++) {
             View childView = getChildAt(i);
-            if (i == 0) {
-                left = (getWidth() - getChildAt(selectedIndex).getMeasuredWidth()) / 2 - middlePos;
-            } else {
-                View prevChildView = getChildAt(i - 1);
-                left = prevChildView.getRight();
+            if (childView.getVisibility() != GONE) {
+                final LayoutParams lp = (LayoutParams) childView.getLayoutParams();
+                int gravity = mLayoutGravity;//lp.gravity;
+                if (gravity == -1) {
+                    gravity = DEFAULT_CHILD_GRAVITY;
+                }
+
+                // 简化模型，暂不考虑margin值
+                if (i == 0) {
+                    left = (getWidth() - getChildAt(selectedIndex).getMeasuredWidth()) / 2 - middlePos;
+                } else {
+                    View prevChildView = getChildAt(i - 1);
+                    left = prevChildView.getRight();
+                }
+                right = left + childView.getMeasuredWidth();
+
+
+                final int height = childView.getMeasuredHeight();
+                int childTop;
+
+                // final int horizontalGravity = gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                final int verticalGravity = gravity & Gravity.VERTICAL_GRAVITY_MASK;
+                switch (verticalGravity) {
+                    case Gravity.TOP:
+                        childTop = parentTop + lp.topMargin;
+                        break;
+                    case Gravity.CENTER_VERTICAL:
+                        childTop = parentTop + (parentBottom - parentTop - height) / 2 +
+                                lp.topMargin - lp.bottomMargin;
+                        break;
+                    case Gravity.BOTTOM:
+                        childTop = parentBottom - height - lp.bottomMargin;
+                        break;
+                    default:
+                        childTop = parentTop + lp.topMargin;
+                }
+
+                childView.layout(left, childTop, right, childTop + height);
             }
-            right = left + childView.getMeasuredWidth();
-
-            childView.layout(left, t, right, b);
         }
 
-        if (mPreviousSelectedView != null) {
-            if (mPreviousSelectedView instanceof IScrollTabView) {
-                ((IScrollTabView) mPreviousSelectedView).onMissSelected();
-            }
-        }
-
-        View currentSelectedView = getChildAt(selectedIndex);
-        if (currentSelectedView instanceof IScrollTabView) {
-            ((IScrollTabView) currentSelectedView).onSelected();
-        }
-        mPreviousSelectedView = currentSelectedView;
+        onTabChecked(selectedIndex);
     }
 
     public void computeScroll() {
@@ -138,7 +178,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
         final boolean isWrapContentHeight = heightMode != MeasureSpec.EXACTLY;
 
         // 计算出所有的childView的宽和高
-        measureChildren(widthMeasureSpec, heightMeasureSpec);
+//        measureChildren(widthMeasureSpec, heightMeasureSpec);
         /*
          * 记录如果是wrap_content是设置的宽和高
          */
@@ -161,12 +201,21 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
         // 用于计算下面两个childiew的宽度，最终宽度取二者之间大值
         int bWidth = 0;
 
+        int desireWidth = 0;
+        int desireHeight = 0;
         /*
          * 根据childView计算的出的宽和高，以及设置的margin计算容器的宽和高，主要用于容器是warp_content时
          */
         for (int i = 0; i < cCount; i++) {
             View childView = getChildAt(i);
-            cWidth = childView.getMeasuredWidth();
+            if (childView.getVisibility() != GONE) {
+                LayoutParams lp = (LayoutParams) childView.getLayoutParams();
+                measureChildWithMargins(childView, widthMeasureSpec, 0, heightMeasureSpec, 0);
+                desireWidth += childView.getMeasuredWidth() + lp.leftMargin + lp.rightMargin;
+                desireHeight = Math.max(desireHeight, childView.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
+            }
+
+            /*cWidth = childView.getMeasuredWidth();
             cHeight = childView.getMeasuredHeight();
             cParams = (MarginLayoutParams) childView.getLayoutParams();
 
@@ -185,12 +234,19 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
             if (i == 1 || i == 3) {
                 rHeight += cHeight + cParams.topMargin + cParams.bottomMargin;
-            }
+            }*/
+
 
         }
 
-        width = Math.max(tWidth, bWidth);
-        height = Math.max(lHeight, rHeight);
+//        width = Math.max(tWidth, bWidth);
+//        height = Math.max(lHeight, rHeight);
+
+        desireWidth += getPaddingLeft() + getPaddingRight();
+        desireHeight += getPaddingTop() + getPaddingBottom();
+
+        desireWidth = Math.max(desireWidth, getSuggestedMinimumWidth());
+        desireHeight = Math.max(desireHeight, getSuggestedMinimumHeight());
 
         /*
          * 补加padding值
@@ -203,13 +259,28 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
          * 如果是wrap_content设置为我们计算的值
          * 否则：直接设置为父容器计算的值
          */
-        setMeasuredDimension(
-                (widthMode == MeasureSpec.EXACTLY) ? sizeWidth : width,
-                (heightMode == MeasureSpec.EXACTLY) ? sizeHeight : height
-        );
+//        setMeasuredDimension(
+//                (widthMode == MeasureSpec.EXACTLY) ? sizeWidth : width,
+//                (heightMode == MeasureSpec.EXACTLY) ? sizeHeight : height);
+
+        setMeasuredDimension(resolveSize(desireWidth, widthMeasureSpec), resolveSize(desireHeight, heightMeasureSpec));
 
 //        setMeasuredDimension(View.MeasureSpec.getSize(widthMeasureSpec), View.MeasureSpec.getSize(heightMeasureSpec));
 //        setMeasuredDimension(myWidth, myHeight);
+    }
+
+    private void onTabChecked(int selectedIndex) {
+        if (mPreviousSelectedView != null) {
+            if (mPreviousSelectedView instanceof IScrollTabView) {
+                ((IScrollTabView) mPreviousSelectedView).onMissSelected();
+            }
+        }
+
+        View currentSelectedView = getChildAt(selectedIndex);
+        if (currentSelectedView instanceof IScrollTabView) {
+            ((IScrollTabView) currentSelectedView).onSelected();
+        }
+        mPreviousSelectedView = currentSelectedView;
     }
 
 
@@ -235,6 +306,8 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
         if (mOnSelectedListener != null) {
             mOnSelectedListener.onSelected(getChildAt(toIndex));
         }
+
+        onTabChecked(toIndex);
     }
 
     private int getScrollDistance(int fromIndex, int toIndex) {
@@ -360,7 +433,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
     @Override
     protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
-        return new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        return new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     }
 
     @Override
@@ -370,8 +443,19 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
     public static class LayoutParams extends MarginLayoutParams {
 
+        public static final int UNSPECIFIED_GRAVITY = -1;
+
+        public int gravity = UNSPECIFIED_GRAVITY;
+
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
+
+//            for (int i = 0; i < attrs.getAttributeCount(); i++) {
+//                String name = attrs.getAttributeName(i);
+//                Object value = attrs.getAttributeValue(i);
+//                Log.d(TAG, name + " : " + value + " of type " + value.getClass().getSimpleName());
+//            }
+
         }
 
         public LayoutParams(int width, int height) {
@@ -384,7 +468,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
     }
 
 
-    private interface IOnSelectedListener {
+    protected interface IOnSelectedListener {
         void onSelected(View v);
     }
 }
