@@ -17,6 +17,7 @@ import android.widget.Scroller;
 /**
  * 滑动tab的容器
  * Created by jinjingcao on 2017/8/22.
+ * @see {http://blog.csdn.net/qiaoidea/article/details/23604529} for A good refreence.
  */
 
 public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
