@@ -20,7 +20,7 @@ import android.widget.Scroller;
  */
 
 public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
-    private static final int DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.START;
+    private static final int DEFAULT_LAYOUT_GRAVITY = Gravity.TOP | Gravity.START;
 
     private static final float DEFAULT_SLASH_DISTANCE = 50.0f;
     private static final float DEFAULT_CLICK_CAUSE_DISTANCE = 44.0f;
@@ -46,7 +46,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
     public ScrollTabViewGroup(Context context) {
         super(context);
         mScroller = new Scroller(context);
-        mLayoutGravity = DEFAULT_CHILD_GRAVITY;
+        mLayoutGravity = DEFAULT_LAYOUT_GRAVITY;
         this.setOnTouchListener(this);
     }
 
@@ -113,7 +113,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
                 final LayoutParams lp = (LayoutParams) childView.getLayoutParams();
                 int gravity = mLayoutGravity;//lp.gravity;
                 if (gravity == -1) {
-                    gravity = DEFAULT_CHILD_GRAVITY;
+                    gravity = DEFAULT_LAYOUT_GRAVITY;
                 }
 
                 // 简化模型，暂不考虑margin值
@@ -179,27 +179,10 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
         // 计算出所有的childView的宽和高
 //        measureChildren(widthMeasureSpec, heightMeasureSpec);
-        /*
-         * 记录如果是wrap_content是设置的宽和高
-         */
-        int width = 0;
-        int height = 0;
 
         int cCount = getChildCount();
 
-        int cWidth = 0;
-        int cHeight = 0;
         MarginLayoutParams cParams = null;
-
-        // 用于计算左边两个childView的高度
-        int lHeight = 0;
-        // 用于计算右边两个childView的高度，最终高度取二者之间大值
-        int rHeight = 0;
-
-        // 用于计算上边两个childView的宽度
-        int tWidth = 0;
-        // 用于计算下面两个childiew的宽度，最终宽度取二者之间大值
-        int bWidth = 0;
 
         int desireWidth = 0;
         int desireHeight = 0;
@@ -215,32 +198,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
                 desireHeight = Math.max(desireHeight, childView.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
             }
 
-            /*cWidth = childView.getMeasuredWidth();
-            cHeight = childView.getMeasuredHeight();
-            cParams = (MarginLayoutParams) childView.getLayoutParams();
-
-            // 上面两个childView
-            if (i == 0 || i == 1) {
-                tWidth += cWidth + cParams.leftMargin + cParams.rightMargin;
-            }
-
-            if (i == 2 || i == 3) {
-                bWidth += cWidth + cParams.leftMargin + cParams.rightMargin;
-            }
-
-            if (i == 0 || i == 2) {
-                lHeight += cHeight + cParams.topMargin + cParams.bottomMargin;
-            }
-
-            if (i == 1 || i == 3) {
-                rHeight += cHeight + cParams.topMargin + cParams.bottomMargin;
-            }*/
-
-
         }
-
-//        width = Math.max(tWidth, bWidth);
-//        height = Math.max(lHeight, rHeight);
 
         desireWidth += getPaddingLeft() + getPaddingRight();
         desireHeight += getPaddingTop() + getPaddingBottom();
@@ -266,7 +224,6 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
         setMeasuredDimension(resolveSize(desireWidth, widthMeasureSpec), resolveSize(desireHeight, heightMeasureSpec));
 
 //        setMeasuredDimension(View.MeasureSpec.getSize(widthMeasureSpec), View.MeasureSpec.getSize(heightMeasureSpec));
-//        setMeasuredDimension(myWidth, myHeight);
     }
 
     private void onTabChecked(int selectedIndex) {
@@ -433,7 +390,8 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
     @Override
     protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
-        return new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        // used for default child element
+        return new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     @Override
