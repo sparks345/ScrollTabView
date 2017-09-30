@@ -17,6 +17,7 @@ import android.widget.Scroller;
 /**
  * 滑动tab的容器
  * Created by jinjingcao on 2017/8/22.
+ *
  * @see {http://blog.csdn.net/qiaoidea/article/details/23604529} for A good refreence.
  */
 
@@ -99,17 +100,9 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
         int left = 0;
         int right = 0;
         int selectedIndex = mSelectedIndex;// 默认选中的项
-        int middlePos = 0;// 中间点
 
         final int parentTop = getPaddingTop();// getPaddingTopWithForeground();
         final int parentBottom = b - t - parentTop;
-
-        for (int i = 0; i < childCount; i++) {
-            View childView = getChildAt(i);
-            if (i < selectedIndex) {
-                middlePos += childView.getMeasuredWidth();
-            }
-        }
 
         for (int i = 0; i < childCount; i++) {
             View childView = getChildAt(i);
@@ -122,7 +115,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
 
                 // 简化模型，暂不考虑margin值
                 if (i == 0) {
-                    left = (getWidth() - getChildAt(selectedIndex).getMeasuredWidth()) / 2 - middlePos;
+                    left = (getWidth() - getChildAt(0).getMeasuredWidth()) / 2;
                 } else {
                     View prevChildView = getChildAt(i - 1);
                     left = prevChildView.getRight();
@@ -281,6 +274,7 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
             toIndex = tmp;
         }
 
+//        float firstOffset = getChildAt(0).getWidth() / 2.0f;
         for (int i = fromIndex; i < toIndex; i++) {
 //            Math.round((getChildAt(fromIndex).getWidth() + getChildAt(toIndex).getWidth()) / 2.0f);
             ret += Math.round((getChildAt(i).getWidth() + getChildAt(i + 1).getWidth()) / 2.0f);

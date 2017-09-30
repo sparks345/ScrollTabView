@@ -20,18 +20,18 @@ public class MainActivity extends AppCompatActivity implements IOnSelectedListen
         ScrollTabViewGroup tabScroll = (ScrollTabViewGroup) findViewById(R.id.tab_scroll);
         tabScroll.bindScrollEvent(getRootView(this));
 
-        TextView tv = new TextView(this);
-        tv.setText("MMMMM");
-        tabScroll.addTab(tv);
-
-        ScrollTabView tv2 = new ScrollTabView(this);
-        tv2.setText("XXDFSLON::");
-
-        tabScroll.addTab(tv2);
-
-        ScrollTabView tv3 = new ScrollTabView(this);
-        tv3.setText("XXDFSLON333::");
-        tabScroll.addTab(tv3);
+//        TextView tv = new TextView(this);
+//        tv.setText("MMMMM");
+//        tabScroll.addTab(tv);
+//
+//        ScrollTabView tv2 = new ScrollTabView(this);
+//        tv2.setText("XXDFSLON::");
+//
+//        tabScroll.addTab(tv2);
+//
+//        ScrollTabView tv3 = new ScrollTabView(this);
+//        tv3.setText("XXDFSLON333::");
+//        tabScroll.addTab(tv3);
 
         tabScroll.setOnTabSelected(this);
     }

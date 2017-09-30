@@ -24,23 +24,25 @@
         android:layout_height="40dp">
 
         <com.tencent.jinjingcao.scrolltabview.ScrollTabView
-            android:paddingRight="20dp"
-            android:layout_marginRight="40dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="aaaaa"/>
+            android:text="拉伸"/>
 
         <com.tencent.jinjingcao.scrolltabview.ScrollTabView
-            android:paddingRight="20dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="bbbb"/>
+            android:text="啊哈哈"/>
 
-        <com.tencent.jinjingcao.scrolltabview.ScrollTabView
-            android:paddingRight="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="cccc"/>
+        <!--<com.tencent.jinjingcao.scrolltabview.ScrollTabView-->
+            <!--android:paddingRight="40dp"-->
+            <!--android:paddingLeft="40dp"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="cc"/>-->
     </com.tencent.jinjingcao.scrolltabview.ScrollTabViewGroup>
 
 </android.support.constraint.ConstraintLayout>
