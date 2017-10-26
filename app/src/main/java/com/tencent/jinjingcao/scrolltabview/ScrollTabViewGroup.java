@@ -255,7 +255,8 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
             toPos = -toPos;
         }
         mScroller.startScroll(getScrollX(), 0, toPos, 0, mDuration);
-        invalidate();
+        postInvalidate();
+
         mSelectedIndex = toIndex;
         if (mOnSelectedListener != null) {
             mOnSelectedListener.onSelected(getChildAt(toIndex));
