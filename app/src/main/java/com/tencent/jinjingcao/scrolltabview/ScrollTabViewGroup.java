@@ -147,6 +147,9 @@ public class ScrollTabViewGroup extends ViewGroup implements OnTouchListener {
             }
         }
 
+        // 页面重绘触发layout时，会按照index重新排版，此时会把scroll位置叠加进去，需要复位scroll到0，否则位置会偏移
+        mScroller.startScroll(0, 0, 0, 0, 0);
+
         onTabChecked(selectedIndex);
     }
 
